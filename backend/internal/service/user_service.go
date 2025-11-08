@@ -13,6 +13,7 @@ type UserService interface {
 	Register(email, password, name string) (*model.User, error)
 	Login(email, password string) (string, error)
 	GetUserByID(id uint) (*model.User, error)
+	GetUserByEmail(email string) (*model.User, error)
 	UpdateUser(user *model.User) error
 	DeleteUser(id uint) error
 	ListUsers(page, pageSize int) ([]model.User, int64, error)
@@ -87,6 +88,10 @@ func (s *userService) Login(email, password string) (string, error) {
 
 func (s *userService) GetUserByID(id uint) (*model.User, error) {
 	return s.userRepo.GetByID(id)
+}
+
+func (s *userService) GetUserByEmail(email string) (*model.User, error) {
+	return s.userRepo.GetByEmail(email)
 }
 
 func (s *userService) UpdateUser(user *model.User) error {

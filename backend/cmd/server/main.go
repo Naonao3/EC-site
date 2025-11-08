@@ -85,7 +85,7 @@ func main() {
 	})
 
 	// APIルート
-	api := router.Group("/api/v1")
+	api := router.Group("/api")
 	{
 		// 認証不要のルート
 		auth := api.Group("/auth")

@@ -46,8 +46,16 @@ func (h *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
+	// 登録後、自動的にログイントークンを生成
+	token, err := h.userService.Login(req.Email, req.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User registered but login failed"})
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "User registered successfully",
+		"token":   token,
 		"user":    user,
 	})
 }
@@ -66,9 +74,17 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// ユーザー情報を取得
+	user, err := h.userService.GetUserByEmail(req.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Login successful but failed to get user info"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
 		"token":   token,
+		"user":    user,
 	})
 }
 
