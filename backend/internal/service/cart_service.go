@@ -9,8 +9,8 @@ import (
 
 type CartService interface {
 	GetCart(userID uint) (*model.Cart, error)
-	AddToCart(userID, productID uint, quantity int) error
-	UpdateCartItem(userID, cartItemID uint, quantity int) error
+	AddToCart(userID, productID uint, quantity int) (*model.CartItem, error)
+	UpdateCartItem(userID, cartItemID uint, quantity int) (*model.CartItem, error)
 	RemoveFromCart(userID, cartItemID uint) error
 	ClearCart(userID uint) error
 }
@@ -50,83 +50,122 @@ func (s *cartService) GetCart(userID uint) (*model.Cart, error) {
 }
 
 // カートに追加
-func (s *cartService) AddToCart(userID, productID uint, quantity int) error {
+func (s *cartService) AddToCart(userID, productID uint, quantity int) (*model.CartItem, error) {
 	// バリデーション
 	if quantity <= 0 {
-		return errors.New("quantity must be greater than 0")
+		return nil, errors.New("quantity must be greater than 0")
 	}
 
 	// 商品の存在確認
 	product, err := s.productRepo.GetByID(productID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// 在庫確認
 	if product.Stock < quantity {
-		return errors.New("insufficient stock")
+		return nil, errors.New("insufficient stock")
 	}
 
 	// 既に同じ商品がカートにあるか確認
 	existingItem, err := s.cartRepo.GetByUserAndProduct(userID, productID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	var itemID uint
 	if existingItem != nil {
 		// 既にある場合は数量を更新
 		newQuantity := existingItem.Quantity + quantity
-		
+
 		// 在庫確認
 		if product.Stock < newQuantity {
-			return errors.New("insufficient stock")
+			return nil, errors.New("insufficient stock")
 		}
 
 		existingItem.Quantity = newQuantity
-		return s.cartRepo.Update(existingItem)
+		if err := s.cartRepo.Update(existingItem); err != nil {
+			return nil, err
+		}
+		itemID = existingItem.ID
+	} else {
+		// 新規追加
+		cartItem := &model.CartItem{
+			UserID:    userID,
+			ProductID: productID,
+			Quantity:  quantity,
+		}
+
+		if err := s.cartRepo.Create(cartItem); err != nil {
+			return nil, err
+		}
+		itemID = cartItem.ID
 	}
 
-	// 新規追加
-	cartItem := &model.CartItem{
-		UserID:    userID,
-		ProductID: productID,
-		Quantity:  quantity,
+	// 追加/更新されたアイテムを商品情報とともに取得
+	items, err := s.cartRepo.GetByUserID(userID)
+	if err != nil {
+		return nil, err
 	}
 
-	return s.cartRepo.Create(cartItem)
+	// 該当のアイテムを探して返す
+	for _, item := range items {
+		if item.ID == itemID {
+			return &item, nil
+		}
+	}
+
+	return nil, errors.New("failed to retrieve cart item")
 }
 
 // カートアイテム更新
-func (s *cartService) UpdateCartItem(userID, cartItemID uint, quantity int) error {
+func (s *cartService) UpdateCartItem(userID, cartItemID uint, quantity int) (*model.CartItem, error) {
 	// バリデーション
 	if quantity <= 0 {
-		return errors.New("quantity must be greater than 0")
+		return nil, errors.New("quantity must be greater than 0")
 	}
 
 	// カートアイテム取得
 	cartItem, err := s.cartRepo.GetByID(cartItemID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// ユーザーの所有確認
 	if cartItem.UserID != userID {
-		return errors.New("unauthorized")
+		return nil, errors.New("unauthorized")
 	}
 
 	// 商品の在庫確認
 	product, err := s.productRepo.GetByID(cartItem.ProductID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if product.Stock < quantity {
-		return errors.New("insufficient stock")
+		return nil, errors.New("insufficient stock")
 	}
 
 	// 数量更新
 	cartItem.Quantity = quantity
-	return s.cartRepo.Update(cartItem)
+	if err := s.cartRepo.Update(cartItem); err != nil {
+		return nil, err
+	}
+
+	// 更新されたアイテムを商品情報とともに取得
+	items, err := s.cartRepo.GetByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 該当のアイテムを探して返す
+	for _, item := range items {
+		if item.ID == cartItemID {
+			return &item, nil
+		}
+	}
+
+	return nil, errors.New("failed to retrieve cart item")
 }
 
 // カートから削除
