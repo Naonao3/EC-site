@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Layout } from '@/components/layout'
 import { Button, Loading } from '@/components/ui'
 import { useCartStore } from '@/stores/cartStore'
+import { useCheckoutStore } from '@/stores/checkoutStore'
 
 function SuccessContent() {
   const router = useRouter()
@@ -13,13 +14,15 @@ function SuccessContent() {
   const orderId = searchParams.get('order_id')
 
   const { clearCart } = useCartStore()
+  const { resetCheckout } = useCheckoutStore()
   const [isClearing, setIsClearing] = useState(true)
 
   useEffect(() => {
-    // カートをクリア
+    // カートとチェックアウト状態をクリア
     const clear = async () => {
       try {
         await clearCart()
+        resetCheckout()
       } catch (err) {
         console.error('カートのクリアに失敗:', err)
       } finally {
@@ -28,7 +31,7 @@ function SuccessContent() {
     }
 
     clear()
-  }, [clearCart])
+  }, [clearCart, resetCheckout])
 
   if (isClearing) {
     return <Loading fullScreen text="注文を処理中..." />

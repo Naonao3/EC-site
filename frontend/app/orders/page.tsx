@@ -130,7 +130,7 @@ export default function OrdersPage() {
                   <div>
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="font-semibold text-lg">
-                        注文番号: {order.order_number}
+                        注文番号: #{order.id}
                       </h3>
                       {getStatusBadge(order.status)}
                     </div>
@@ -147,11 +147,11 @@ export default function OrdersPage() {
                 </div>
 
                 {/* 注文商品 */}
-                {order.items && order.items.length > 0 && (
+                {order.order_items && order.order_items.length > 0 && (
                   <div className="border-t pt-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-3">注文内容</h4>
                     <div className="space-y-2">
-                      {order.items.map((item) => (
+                      {order.order_items.map((item) => (
                         <div
                           key={item.id}
                           className="flex justify-between items-center text-sm"
@@ -160,7 +160,7 @@ export default function OrdersPage() {
                             {item.product?.name || '商品名不明'} × {item.quantity}
                           </span>
                           <span className="text-gray-600">
-                            ¥{(item.unit_price * item.quantity).toLocaleString()}
+                            ¥{(item.price * item.quantity).toLocaleString()}
                           </span>
                         </div>
                       ))}
