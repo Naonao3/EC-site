@@ -1,0 +1,7 @@
+.env
+.env.local
+.env.production
+*.exe
+.git
+.gitignore
+README.md
