@@ -23,11 +23,13 @@ export default function LoginPage() {
 
     try {
       await login(email, password)
-      router.push('/products')
+      // ログイン成功後、少し待ってから遷移（状態の同期を確実にする）
+      setTimeout(() => {
+        router.push('/products')
+      }, 100)
     } catch (err: any) {
       setError(err.response?.data?.error || 'ログインに失敗しました')
       console.error(err)
-    } finally {
       setIsLoading(false)
     }
   }

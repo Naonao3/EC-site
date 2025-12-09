@@ -10,8 +10,23 @@ export const Header: React.FC = () => {
   const { itemCount, fetchCart } = useCartStore()
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchCart().catch(console.error)
+    // トークンの存在も確認
+    const hasToken = typeof window !== 'undefined' && localStorage.getItem('auth_token')
+
+    if (isAuthenticated && hasToken) {
+      // 遅延させてトークンが確実に利用可能になるまで待つ
+      const timer = setTimeout(() => {
+        fetchCart().catch((err) => {
+          // 認証エラーは静かに無視（初回ロード時の一時的なエラー）
+          if (err?.response?.status === 401) {
+            console.debug('Cart fetch unauthorized (ignored)')
+          } else {
+            console.error('Failed to fetch cart:', err)
+          }
+        })
+      }, 200)
+
+      return () => clearTimeout(timer)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated])

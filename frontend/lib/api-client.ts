@@ -48,8 +48,12 @@ class ApiClient {
         if (error.response?.status === 401) {
           // 認証エラー時はトークン削除
           this.removeToken()
+          // ログインページとレジスターページ以外の場合のみリダイレクト
           if (typeof window !== 'undefined') {
-            window.location.href = '/login'
+            const currentPath = window.location.pathname
+            if (currentPath !== '/login' && currentPath !== '/register') {
+              window.location.href = '/login'
+            }
           }
         }
         return Promise.reject(error)
