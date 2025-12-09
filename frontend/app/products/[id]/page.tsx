@@ -76,7 +76,7 @@ export default function ProductDetailPage() {
     )
   }
 
-  const stockQuantity = product.inventory?.stock_quantity || 0
+  const stockQuantity = product.stock || 0
   const isInStock = stockQuantity > 0
 
   return (

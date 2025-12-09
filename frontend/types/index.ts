@@ -23,12 +23,11 @@ export interface Product {
   name: string
   description?: string
   price: number
-  category_id: number
+  stock: number  // バックエンドから直接返される在庫数
+  category?: string
   image_url?: string
   created_at: string
   updated_at: string
-  category?: Category
-  inventory?: Inventory
 }
 
 export interface Inventory {

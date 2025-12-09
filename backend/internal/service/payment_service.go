@@ -81,7 +81,7 @@ func (s *paymentService) CreatePaymentIntent(orderID uint, userID uint) (string,
 	payment := &model.Payment{
 		OrderID:               orderID,
 		StripePaymentIntentID: pi.ID,
-		Amount:                order.TotalAmount,
+		Amount:                int(order.TotalAmount),
 		Currency:              "jpy",
 		Status:                "pending",
 	}

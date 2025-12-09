@@ -10,7 +10,7 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const imageUrl = product.image_url || '/placeholder-product.jpg'
-  const stockQuantity = product.inventory?.stock_quantity || 0
+  const stockQuantity = product.stock || 0
   const isInStock = stockQuantity > 0
 
   return (

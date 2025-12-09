@@ -126,23 +126,21 @@ class ApiClient {
     return response.data.cart?.items || response.data.items || []
   }
 
-  async addToCart(product_id: number, quantity: number): Promise<CartItem> {
-    const response = await this.client.post<{ item: CartItem }>('/cart', {
+  async addToCart(product_id: number, quantity: number): Promise<void> {
+    await this.client.post('/cart/items', {
       product_id,
       quantity,
     })
-    return response.data.item
   }
 
-  async updateCartItem(id: number, quantity: number): Promise<CartItem> {
-    const response = await this.client.put<{ item: CartItem }>(`/cart/${id}`, {
+  async updateCartItem(id: number, quantity: number): Promise<void> {
+    await this.client.put(`/cart/items/${id}`, {
       quantity,
     })
-    return response.data.item
   }
 
   async removeFromCart(id: number): Promise<void> {
-    await this.client.delete(`/cart/${id}`)
+    await this.client.delete(`/cart/items/${id}`)
   }
 
   async clearCart(): Promise<void> {

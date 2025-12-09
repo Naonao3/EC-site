@@ -13,7 +13,8 @@ export const Header: React.FC = () => {
     if (isAuthenticated) {
       fetchCart().catch(console.error)
     }
-  }, [isAuthenticated, fetchCart])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated])
 
   return (
     <header className="bg-white shadow-md">
