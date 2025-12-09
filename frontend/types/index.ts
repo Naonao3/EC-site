@@ -50,12 +50,11 @@ export interface CartItem {
 export interface Order {
   id: number
   user_id: number
-  order_number: string
   total_amount: number
   status: OrderStatus
   created_at: string
   updated_at: string
-  items?: OrderItem[]
+  order_items?: OrderItem[]
   payment?: Payment
 }
 
@@ -66,7 +65,9 @@ export interface OrderItem {
   order_id: number
   product_id: number
   quantity: number
-  unit_price: number
+  price: number
+  created_at: string
+  updated_at: string
   product?: Product
 }
 

@@ -60,12 +60,16 @@ func (h *CartHandler) AddToCart(c *gin.Context) {
 		return
 	}
 
-	if err := h.cartService.AddToCart(userID.(uint), req.ProductID, req.Quantity); err != nil {
+	item, err := h.cartService.AddToCart(userID.(uint), req.ProductID, req.Quantity)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Item added to cart successfully"})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Item added to cart successfully",
+		"item":    item,
+	})
 }
 
 // UpdateCartItem カートアイテム更新
@@ -88,12 +92,16 @@ func (h *CartHandler) UpdateCartItem(c *gin.Context) {
 		return
 	}
 
-	if err := h.cartService.UpdateCartItem(userID.(uint), uint(cartItemID), req.Quantity); err != nil {
+	item, err := h.cartService.UpdateCartItem(userID.(uint), uint(cartItemID), req.Quantity)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Cart item updated successfully"})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Cart item updated successfully",
+		"item":    item,
+	})
 }
 
 // RemoveFromCart カートから削除

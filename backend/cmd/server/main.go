@@ -92,6 +92,8 @@ func main() {
 		{
 			auth.POST("/register", userHandler.Register)
 			auth.POST("/login", userHandler.Login)
+			// 認証が必要なルート
+			auth.GET("/me", middleware.AuthMiddleware(cfg.JWT.Secret), userHandler.GetProfile)
 		}
 
 		// 商品関連（認証不要）

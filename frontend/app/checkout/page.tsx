@@ -14,12 +14,11 @@ import { useAuthStore } from '@/stores/authStore'
 export default function CheckoutPage() {
   const router = useRouter()
   const { isAuthenticated } = useAuthStore()
-  const { items, totalAmount } = useCartStore()
-  const { createOrder, createPaymentIntent, clientSecret } = useCheckoutStore()
+  const { items } = useCartStore()
+  const { createOrder, createPaymentIntent, clientSecret, currentOrder } = useCheckoutStore()
 
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [orderId, setOrderId] = useState<number | null>(null)
 
   const stripePromise = getStripe()
 
@@ -29,18 +28,27 @@ export default function CheckoutPage() {
       return
     }
 
-    if (items.length === 0) {
-      router.push('/cart')
-      return
-    }
-
     const initializeCheckout = async () => {
       try {
         setIsLoading(true)
 
+        // 既に注文が作成されている場合はスキップ
+        if (currentOrder) {
+          // Payment Intent作成（既存の場合は既存のclient_secretを返す）
+          await createPaymentIntent(currentOrder.id)
+          setError(null)
+          setIsLoading(false)
+          return
+        }
+
+        // カートが空の場合はカートページへリダイレクト
+        if (items.length === 0) {
+          router.push('/cart')
+          return
+        }
+
         // 注文作成
         const order = await createOrder()
-        setOrderId(order.id)
 
         // Payment Intent作成
         await createPaymentIntent(order.id)
@@ -55,7 +63,7 @@ export default function CheckoutPage() {
     }
 
     initializeCheckout()
-  }, [isAuthenticated, items, router, createOrder, createPaymentIntent])
+  }, [isAuthenticated, items, router, createOrder, createPaymentIntent, currentOrder])
 
   if (!isAuthenticated) {
     return null
@@ -69,7 +77,7 @@ export default function CheckoutPage() {
     )
   }
 
-  if (error || !clientSecret || !orderId) {
+  if (error || !clientSecret || !currentOrder) {
     return (
       <Layout>
         <Error message={error || 'チェックアウト情報の取得に失敗しました'} />
@@ -84,6 +92,8 @@ export default function CheckoutPage() {
     },
   }
 
+  const orderItems = currentOrder.order_items || []
+
   return (
     <Layout>
       <div className="max-w-2xl mx-auto">
@@ -93,13 +103,13 @@ export default function CheckoutPage() {
         <div className="bg-gray-50 rounded-lg p-6 mb-8">
           <h2 className="text-lg font-semibold mb-4">注文内容</h2>
           <div className="space-y-2">
-            {items.map((item) => (
+            {orderItems.map((item) => (
               <div key={item.id} className="flex justify-between text-sm">
                 <span>
                   {item.product?.name} × {item.quantity}
                 </span>
                 <span>
-                  ¥{((item.product?.price || 0) * item.quantity).toLocaleString()}
+                  ¥{(item.price * item.quantity).toLocaleString()}
                 </span>
               </div>
             ))}
@@ -107,14 +117,14 @@ export default function CheckoutPage() {
           <div className="border-t mt-4 pt-4 flex justify-between items-center">
             <span className="text-lg font-semibold">合計</span>
             <span className="text-2xl font-bold text-blue-600">
-              ¥{totalAmount.toLocaleString()}
+              ¥{currentOrder.total_amount.toLocaleString()}
             </span>
           </div>
         </div>
 
         {/* Stripe決済フォーム */}
         <Elements stripe={stripePromise} options={options}>
-          <CheckoutForm orderId={orderId} />
+          <CheckoutForm orderId={currentOrder.id} />
         </Elements>
       </div>
     </Layout>

@@ -49,10 +49,31 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 			return
 		}
 
-		// ユーザー情報をコンテキストに保存
-		c.Set("user_id", uint(claims["user_id"].(float64)))
-		c.Set("email", claims["email"].(string))
-		c.Set("role", claims["role"].(string))
+		// ユーザー情報をコンテキストに保存（安全な型アサーション）
+		userID, ok := claims["user_id"].(float64)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user_id in token"})
+			c.Abort()
+			return
+		}
+
+		email, ok := claims["email"].(string)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email in token"})
+			c.Abort()
+			return
+		}
+
+		role, ok := claims["role"].(string)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid role in token"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", uint(userID))
+		c.Set("email", email)
+		c.Set("role", role)
 
 		c.Next()
 	}

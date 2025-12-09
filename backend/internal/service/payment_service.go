@@ -56,8 +56,16 @@ func (s *paymentService) CreatePaymentIntent(orderID uint, userID uint) (string,
 		return "", err
 	}
 
+	// 既に決済が存在する場合は、既存のPayment IntentからClient Secretを取得して返す
 	if existingPayment != nil {
-		return "", errors.New("payment already exists for this order")
+		// Stripeから既存のPayment Intentを取得
+		pi, err := paymentintent.Get(existingPayment.StripePaymentIntentID, nil)
+		if err != nil {
+			return "", fmt.Errorf("failed to retrieve existing payment intent: %w", err)
+		}
+
+		// Client Secretを返す
+		return pi.ClientSecret, nil
 	}
 
 	// 金額を整数に変換（Stripeは最小通貨単位で扱う。日本円の場合は円単位）
